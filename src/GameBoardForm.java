@@ -1,6 +1,8 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,8 +21,11 @@ public class GameBoardForm extends JFrame{
     private JRadioButton radioButton1;
     private JCheckBox boughtCheckBox;
     private JRadioButton radioButton3;
+    private JButton addButton;
+    private JButton deleteButton;
     private ButtonGroup btnGroup;
     private int order = 0;
+    private int extraGames = 0;
     final private List<BoardGame> gameList = new ArrayList();
     public static void main(String[] args) {
         GameBoardForm frame = new GameBoardForm();
@@ -53,13 +58,37 @@ public class GameBoardForm extends JFrame{
                 }
             }
         });
+        addButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                maker("New("+extraGames+")", false, 1);
+                extraGames++;
+            }
+        });
         NextButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if (order <= gameList.size()){
+                if (order+1 < gameList.size()){
                     order++;
+                    System.out.println("Current item: " +String.valueOf(order+1) + "  " + "Item count: "+gameList.size());
                     displayGame(gameList.get(order));
                 }
+            }
+        });
+        deleteButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                gameList.remove(order);
+                if (order <= gameList.size()){
+
+                }
+            }
+        });
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                System.out.println("window closed");
+                writer();
             }
         });
 
@@ -79,9 +108,13 @@ public class GameBoardForm extends JFrame{
             System.err.println("nebyl nalezen soubor " + e.getLocalizedMessage());
         }
     }
-    public void writer(String line, int order){
+    public void writer(){
         try(PrintWriter wr = new PrintWriter(new BufferedWriter(new FileWriter("soubor")))) {
-            wr.println(line);
+            fileCleaner("soubor");
+            for (BoardGame game: gameList){
+                wr.print(game.getName()+";"+game.isBought()+";"+game.getRating());
+                wr.println("");
+            }
         }
         catch (FileNotFoundException e){
             System.err.println("nebyl nalezen soubor " + e.getLocalizedMessage());
@@ -90,10 +123,26 @@ public class GameBoardForm extends JFrame{
             System.err.println("IOE problem" + e.getLocalizedMessage());
         }
     }
+    public void fileCleaner(String soubor){
+        try {
+            File file = new File(soubor);
+            FileWriter fWriter = new FileWriter(file);
+            fWriter.write("");
+            fWriter.close();
+        }catch (IOException e){
+            System.err.println("fileCleaner problem" + e.getLocalizedMessage());
+        }
+    }
+    public void maker(String name, boolean bought, int rating){
+        gameList.add(new BoardGame(name, bought , rating));
+    }
     public void displayGame(BoardGame game){
         nameTextField.setText(game.getName());
         if (game.isBought()){
             boughtCheckBox.setSelected(true);
+        }
+        else {
+            boughtCheckBox.setSelected(false);
         }
         switch (game.getRating()){
             case 1:
@@ -108,7 +157,7 @@ public class GameBoardForm extends JFrame{
     }
     public void saveGame(BoardGame game){
         //Saving Name
-        game.setName(nameTextField.getName());
+        game.setName(nameTextField.getText());
 
         //Saving Bought
         if (boughtCheckBox.isSelected()){
@@ -125,6 +174,12 @@ public class GameBoardForm extends JFrame{
         } else if (radioButton3.isSelected()) {
             game.setRating(3);
         }
+    }
+    public void next() {
+
+    }
+    public void last() {
+
     }
 
 
