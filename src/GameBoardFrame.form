@@ -105,7 +105,7 @@
           <grid row="1" column="2" row-span="1" col-span="1" vsize-policy="0" hsize-policy="3" anchor="8" fill="0" indent="0" use-parent-layout="false"/>
         </constraints>
         <properties>
-          <text value="yes/no"/>
+          <text value="yes"/>
         </properties>
       </component>
       <component id="a7e06" class="javax.swing.JRadioButton" binding="radioButton3">

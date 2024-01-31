@@ -1,6 +1,5 @@
 import javax.swing.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
@@ -23,10 +22,9 @@ public class GameBoardForm extends JFrame{
     private JRadioButton radioButton3;
     private JButton addButton;
     private JButton deleteButton;
-    private ButtonGroup btnGroup;
     private int order = 0;
     private int extraGames = 0;
-    final private List<BoardGame> gameList = new ArrayList();
+    final private List<BoardGame> gameList = new ArrayList<>();
     public static void main(String[] args) {
         GameBoardForm frame = new GameBoardForm();
         frame.setTitle("BoardEvidence");
@@ -38,52 +36,26 @@ public class GameBoardForm extends JFrame{
     }
     public GameBoardForm(){
         reader();
-        btnGroup = new ButtonGroup();
+        ButtonGroup btnGroup = new ButtonGroup();
         btnGroup.add(radioButton1);
         btnGroup.add(radioButton2);
         btnGroup.add(radioButton3);
         displayGame(gameList.get(order));
-        saveButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                saveGame(gameList.get(order));
-            }
-        });
-        lastButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if(order >= 1){
-                    order--;
-                    displayGame(gameList.get(order));
-                }
-            }
-        });
-        addButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                maker("New("+extraGames+")", false, 1);
-                extraGames++;
-            }
-        });
-        NextButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                if (order+1 < gameList.size()){
-                    order++;
-                    System.out.println("Current item: " +String.valueOf(order+1) + "  " + "Item count: "+gameList.size());
-                    displayGame(gameList.get(order));
-                }
-            }
-        });
-        deleteButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                gameList.remove(order);
-                if (order <= gameList.size()){
 
-                }
-            }
+
+        saveButton.addActionListener(e -> saveGame(gameList.get(order)));
+
+        lastButton.addActionListener(e -> last());
+
+        addButton.addActionListener(e -> {
+            maker("New("+extraGames+")", false, 0);
+            extraGames++;
         });
+
+        NextButton.addActionListener(e -> next());
+
+        deleteButton.addActionListener(e -> delete());
+
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
@@ -110,7 +82,7 @@ public class GameBoardForm extends JFrame{
     }
     public void writer(){
         try(PrintWriter wr = new PrintWriter(new BufferedWriter(new FileWriter("soubor")))) {
-            fileCleaner("soubor");
+            //fileCleaner("soubor");
             for (BoardGame game: gameList){
                 wr.print(game.getName()+";"+game.isBought()+";"+game.getRating());
                 wr.println("");
@@ -123,36 +95,18 @@ public class GameBoardForm extends JFrame{
             System.err.println("IOE problem" + e.getLocalizedMessage());
         }
     }
-    public void fileCleaner(String soubor){
-        try {
-            File file = new File(soubor);
-            FileWriter fWriter = new FileWriter(file);
-            fWriter.write("");
-            fWriter.close();
-        }catch (IOException e){
-            System.err.println("fileCleaner problem" + e.getLocalizedMessage());
-        }
-    }
+
+
     public void maker(String name, boolean bought, int rating){
         gameList.add(new BoardGame(name, bought , rating));
     }
     public void displayGame(BoardGame game){
         nameTextField.setText(game.getName());
-        if (game.isBought()){
-            boughtCheckBox.setSelected(true);
-        }
-        else {
-            boughtCheckBox.setSelected(false);
-        }
-        switch (game.getRating()){
-            case 1:
-                radioButton1.setSelected(true);
-                break;
-            case 2:
-                radioButton2.setSelected(true);
-                break;
-            case 3:
-                radioButton3.setSelected(true);
+        boughtCheckBox.setSelected(game.isBought());
+        switch (game.getRating()) {
+            case 1 -> radioButton1.setSelected(true);
+            case 2 -> radioButton2.setSelected(true);
+            case 3 -> radioButton3.setSelected(true);
         }
     }
     public void saveGame(BoardGame game){
@@ -160,11 +114,7 @@ public class GameBoardForm extends JFrame{
         game.setName(nameTextField.getText());
 
         //Saving Bought
-        if (boughtCheckBox.isSelected()){
-            game.setBought(true);
-        } else {
-            game.setBought(false);
-        }
+        game.setBought(boughtCheckBox.isSelected());
 
         //Saving Rating
         if (radioButton1.isSelected()){
@@ -175,12 +125,33 @@ public class GameBoardForm extends JFrame{
             game.setRating(3);
         }
     }
-    public void next() {
+    public void delete() {
+        gameList.remove(order);
+        if (order <gameList.size()){
+
+            //System.out.println("Current item: " +String.valueOf(order+1) + "  " + "Item count: "+gameList.size());
+            displayGame(gameList.get(order));
+            order++;
+        } else {
+           last();
+
+        }
 
     }
-    public void last() {
-
+    public void last(){
+        if(order >= 1){
+            order--;
+            displayGame(gameList.get(order));
+        }
     }
+    public void next(){
+        if (order+1 < gameList.size()){
+            order++;
+            System.out.println("Current item: " + (order + 1) + "  " + "Item count: "+gameList.size());
+            displayGame(gameList.get(order));
+        }
+    }
+
 
 
 }
