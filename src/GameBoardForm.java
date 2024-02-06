@@ -26,21 +26,26 @@ public class GameBoardForm extends JFrame{
     private int extraGames = 0;
     final private List<BoardGame> gameList = new ArrayList<>();
     public static void main(String[] args) {
+
         GameBoardForm frame = new GameBoardForm();
         frame.setTitle("BoardEvidence");
-
         frame.setSize(500,500);
         frame.setContentPane(frame.panel1);
         frame.setVisible(true);
         frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
     }
     public GameBoardForm(){
-        reader();
+        readFile();
         ButtonGroup btnGroup = new ButtonGroup();
         btnGroup.add(radioButton1);
         btnGroup.add(radioButton2);
         btnGroup.add(radioButton3);
-        displayGame(gameList.get(order));
+        if (!gameList.isEmpty()){
+            displayGame(gameList.get(order));
+        } else {
+            JOptionPane.showMessageDialog(this, "Unable to display list, empty", "Error", JOptionPane.INFORMATION_MESSAGE);
+        }
+
 
 
         saveButton.addActionListener(e -> saveGame(gameList.get(order)));
@@ -48,7 +53,8 @@ public class GameBoardForm extends JFrame{
         lastButton.addActionListener(e -> last());
 
         addButton.addActionListener(e -> {
-            maker("New("+extraGames+")", false, 0);
+
+            addGame("New("+extraGames+")", false, 0);
             extraGames++;
         });
 
@@ -65,8 +71,8 @@ public class GameBoardForm extends JFrame{
         });
 
     }
-    public void reader(){
-        try (Scanner sc = new Scanner(new BufferedReader(new FileReader("soubor")))){
+    public void readFile(){
+        try (Scanner sc = new Scanner(new BufferedReader(new FileReader("Deskovky")))){
             while (sc.hasNext()){
                 String line = sc.nextLine();
                 String[] bloky = line.split(";");
@@ -81,15 +87,15 @@ public class GameBoardForm extends JFrame{
         }
     }
     public void writer(){
-        try(PrintWriter wr = new PrintWriter(new BufferedWriter(new FileWriter("soubor")))) {
-            //fileCleaner("soubor");
-            for (BoardGame game: gameList){
+        try(PrintWriter wr = new PrintWriter(new BufferedWriter(new FileWriter("Deskovky")))) {
+            //fileCleaner("Deskovky");
+            for (BoardGame game : gameList){
                 wr.print(game.getName()+";"+game.isBought()+";"+game.getRating());
                 wr.println("");
             }
         }
         catch (FileNotFoundException e){
-            System.err.println("nebyl nalezen soubor " + e.getLocalizedMessage());
+            System.err.println("nebyl nalezen Deskovky " + e.getLocalizedMessage());
         }
         catch (IOException e){
             System.err.println("IOE problem" + e.getLocalizedMessage());
@@ -97,8 +103,13 @@ public class GameBoardForm extends JFrame{
     }
 
 
-    public void maker(String name, boolean bought, int rating){
-        gameList.add(new BoardGame(name, bought , rating));
+    public void addGame(String name, boolean bought, int rating){
+        if (!gameList.isEmpty()){
+            gameList.add(new BoardGame(name, bought , rating));
+        } else {
+            gameList.add(new BoardGame(name, bought , rating));
+            order=0;
+        }
     }
     public void displayGame(BoardGame game){
         nameTextField.setText(game.getName());
@@ -124,9 +135,10 @@ public class GameBoardForm extends JFrame{
         } else if (radioButton3.isSelected()) {
             game.setRating(3);
         }
+        JOptionPane.showMessageDialog(this, "Saved changes to memory.", "Message saved", JOptionPane.INFORMATION_MESSAGE);
     }
     public void delete() {
-        gameList.remove(order);
+        if (!gameList.isEmpty()) gameList.remove(order);
         if (order <gameList.size()){
 
             //System.out.println("Current item: " +String.valueOf(order+1) + "  " + "Item count: "+gameList.size());
@@ -145,11 +157,14 @@ public class GameBoardForm extends JFrame{
         }
     }
     public void next(){
-        if (order+1 < gameList.size()){
+        if (order+1 < gameList.size() & !gameList.isEmpty()){
             order++;
-            System.out.println("Current item: " + (order + 1) + "  " + "Item count: "+gameList.size());
+            //System.out.println("Current item: " + (order + 1) + "  " + "Item count: "+gameList.size());
             displayGame(gameList.get(order));
         }
+        /*else if (gameList.isEmpty()) {
+            displayGame(gameList.get(0));
+        }*/
     }
 
 
