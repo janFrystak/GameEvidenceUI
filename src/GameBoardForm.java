@@ -169,7 +169,7 @@ public class GameBoardForm extends JFrame{
             displayGame(gameList.get(order));
             order++;
         } else {
-           last();
+            last();
 
         }
 
