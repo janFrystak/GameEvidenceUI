@@ -1,16 +1,14 @@
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class GameBoardForm extends JFrame{
-    private JPanel panel1;
-    private JButton saveButton;
+    public JPanel panel1;
     private JTextField nameTextField;
     private JRadioButton radioButton2;
     private JButton lastButton;
@@ -21,36 +19,48 @@ public class GameBoardForm extends JFrame{
     private JRadioButton radioButton1;
     private JCheckBox boughtCheckBox;
     private JRadioButton radioButton3;
-    private JButton addButton;
-    private JButton deleteButton;
     private JCheckBox autosaveCheckBox;
-    private boolean error = false;
+    private JButton saveButton;
+    private JMenuBar mainMenu = new JMenuBar();
+        private JMenu menuSoubor = new JMenu("File");
+            private JMenuItem menuItemLoad = new JMenuItem("Load");
+            private JMenuItem menuItemSave = new JMenuItem("Save");
+        private JMenu menuAkce = new JMenu("Action");
+            private JMenuItem menuItemAdd = new JMenuItem("Add");
+            private JMenuItem menuItemRemove = new JMenuItem("Remove");
+            private JMenuItem menuItemSort = new JMenuItem("Sort");
+        private JMenu menuSouhrn = new JMenu("Extra");
+            private JMenuItem menuItemStats = new JMenuItem("Stats");
+    private JFileChooser fc = new JFileChooser();
     private boolean autoSave = false;
     private boolean changed = false;
     private int order = 0;
     private int extraGames = 0;
     final private List<BoardGame> gameList = new ArrayList<>();
+    private List<List<BoardGame>> listOfLists = new ArrayList<>();
     public static void main(String[] args) {
 
-        GameBoardForm frame = new GameBoardForm();
-        frame.setTitle("BoardEvidence");
-        frame.setSize(500,500);
-        frame.setContentPane(frame.panel1);
-        frame.setVisible(true);
-        frame.setDefaultCloseOperation(EXIT_ON_CLOSE);
+
+
     }
+
     public GameBoardForm(){
+
+
+        setJMenuBar(mainMenu);
+        InitMenu();
+        setTitle("BoardEvidence");
+        setSize(500,500);
+        //setContentPane(frame.panel1);
+        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        fc.setFileFilter(new FileNameExtensionFilter("Textové soubory", "txt"));
         readFile();
+
         ButtonGroup btnGroup = new ButtonGroup();
         btnGroup.add(radioButton1);
         btnGroup.add(radioButton2);
         btnGroup.add(radioButton3);
-        if (!gameList.isEmpty()){
-            lastButton.setEnabled(false);
-            displayGame(gameList.get(order));
-        } else {
-            JOptionPane.showMessageDialog(this, "Unable to display list, empty", "Error", JOptionPane.INFORMATION_MESSAGE);
-        }
+        prepareWindow();
 
 
 
@@ -58,16 +68,16 @@ public class GameBoardForm extends JFrame{
 
 
 
-        addButton.addActionListener(e -> {
+        /*addButton.addActionListener(e -> {
 
             addGame("New("+extraGames+")", false, 0);
             extraGames++;
-        });
+        });*/
+        //deleteButton.addActionListener(e -> delete());
 
         nextButton.addActionListener(e -> next());
         lastButton.addActionListener(e -> last());
 
-        deleteButton.addActionListener(e -> delete());
         boughtCheckBox.addActionListener(e -> changed = true);
         nameTextField.addActionListener(e -> changed = true);
         radioButton1.addActionListener(e -> changed = true);
@@ -84,6 +94,83 @@ public class GameBoardForm extends JFrame{
         autosaveCheckBox.addActionListener(e -> autoSave());
 
 
+    }
+    public void prepareWindow() {
+        if (!gameList.isEmpty()){
+            lastButton.setEnabled(false);
+            displayGame(gameList.get(order));
+        } else {
+            JOptionPane.showMessageDialog(this, "Unable to display list, empty", "Error", JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+    public void InitMenu(){
+        mainMenu.add(menuSoubor);
+        mainMenu.add(menuAkce);
+        mainMenu.add(menuSouhrn);
+
+        menuSoubor.add(menuItemLoad);
+        menuSoubor.add(menuItemSave);
+
+        menuAkce.add(menuItemAdd);
+        menuAkce.add(menuItemRemove);
+        menuAkce.add(menuItemSort);
+
+        menuSouhrn.add(menuItemStats);
+        setJMenuBar(mainMenu);
+
+
+        menuItemSave.addActionListener(e -> /*saveGame(gameList.get(order))*/ SaveFile());
+        menuItemLoad.addActionListener(e -> LoadFile());
+
+        menuItemRemove.addActionListener(e -> delete());
+        menuItemAdd.addActionListener(e -> {
+
+            addGame("New(" + extraGames + ")", false, 0);
+            extraGames++;
+        });
+        menuItemSort.addActionListener(e -> Sort());
+
+        menuItemStats.addActionListener(e -> ShowStats());
+    }
+    public void ShowStats(){
+        JOptionPane.showMessageDialog(this, "Total Number of Games:" + gameList.size() + "\n" + "Favorite games: " + findFavorite() + " \n" + "Number of bought games: " + findBought() , "Stats", JOptionPane.INFORMATION_MESSAGE);
+    }
+    private void SaveFile(){
+        int result = fc.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            File selectedFile = fc.getSelectedFile();
+            System.out.println("Uživatel vybral soubor: "+selectedFile.getPath());
+        } else {
+            System.out.println("Uživatel ukončil dialog bez výběru souboru.");
+            System.out.println("Například zvolil Storno/Cancel.");
+        }
+    }
+    private void LoadFile(){
+        fc.showOpenDialog(this);
+    }
+    public StringBuilder findFavorite(){
+        StringBuilder list = new StringBuilder();
+        for (BoardGame game: gameList) {
+            if (game.getRating() == 3) {
+                list.append(game.getName()).append(";");
+            }
+        }
+        System.out.println(list);
+        return list;
+
+    }
+    public int findBought(){
+        int boughtNum = 0;
+        for (BoardGame game: gameList) {
+            if (game.isBought()) {
+                boughtNum++;
+            }
+        }
+        return boughtNum;
+    }
+    public void Sort(){
+        gameList.sort(new SortByName());
+        displayGame(gameList.get(order));
     }
     public void readFile(){
         try (Scanner sc = new Scanner(new BufferedReader(new FileReader("Deskovky")))){
