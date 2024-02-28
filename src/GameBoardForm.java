@@ -16,6 +16,7 @@ public class GameBoardForm extends JFrame{
     private JLabel nameLabel;
     private JLabel boughtLabel;
     private JLabel ratingLabel;
+    private JTextArea fileTextArea;
     private JRadioButton radioButton1;
     private JCheckBox boughtCheckBox;
     private JRadioButton radioButton3;
@@ -31,13 +32,14 @@ public class GameBoardForm extends JFrame{
             private JMenuItem menuItemSort = new JMenuItem("Sort");
         private JMenu menuSouhrn = new JMenu("Extra");
             private JMenuItem menuItemStats = new JMenuItem("Stats");
-    private JFileChooser fc = new JFileChooser();
+    private JFileChooser fc = new JFileChooser(".");
     private boolean autoSave = false;
     private boolean changed = false;
     private int order = 0;
     private int extraGames = 0;
+    private File currentFile = new File("src/Deskovky.txt");
     final private List<BoardGame> gameList = new ArrayList<>();
-    private List<List<BoardGame>> listOfLists = new ArrayList<>();
+
     public static void main(String[] args) {
 
 
@@ -54,7 +56,7 @@ public class GameBoardForm extends JFrame{
         //setContentPane(frame.panel1);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         fc.setFileFilter(new FileNameExtensionFilter("Textové soubory", "txt"));
-        readFile();
+        readFile(currentFile);
 
         ButtonGroup btnGroup = new ButtonGroup();
         btnGroup.add(radioButton1);
@@ -136,7 +138,7 @@ public class GameBoardForm extends JFrame{
         JOptionPane.showMessageDialog(this, "Total Number of Games:" + gameList.size() + "\n" + "Favorite games: " + findFavorite() + " \n" + "Number of bought games: " + findBought() , "Stats", JOptionPane.INFORMATION_MESSAGE);
     }
     private void SaveFile(){
-        int result = fc.showOpenDialog(this);
+        int result = fc.showSaveDialog(this);
         if (result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fc.getSelectedFile();
             System.out.println("Uživatel vybral soubor: "+selectedFile.getPath());
@@ -146,7 +148,29 @@ public class GameBoardForm extends JFrame{
         }
     }
     private void LoadFile(){
-        fc.showOpenDialog(this);
+        fileTextArea.setText("src/Deskovky.txt");
+        int result = fc.showOpenDialog(this);
+        if (result == JFileChooser.APPROVE_OPTION) {
+            System.out.println(String.valueOf(fc.getSelectedFile()));
+            showFile(fc.getSelectedFile());
+        }
+
+    }
+    public void showFile (File file) {
+        try (Scanner sc = new Scanner(new BufferedReader(new FileReader(file)))) {
+            StringBuilder text = new StringBuilder();
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                text.append(line).append("\n");
+
+            }
+            fileTextArea.setText(String.valueOf(text));
+        } catch (FileNotFoundException e) {
+            JOptionPane.showMessageDialog(this, "Could not find save file" + e.getLocalizedMessage(), "Error", JOptionPane.INFORMATION_MESSAGE);
+            System.err.println("nebyl nalezen soubor " + e.getLocalizedMessage());
+
+
+        }
     }
     public StringBuilder findFavorite(){
         StringBuilder list = new StringBuilder();
@@ -172,8 +196,8 @@ public class GameBoardForm extends JFrame{
         gameList.sort(new SortByName());
         displayGame(gameList.get(order));
     }
-    public void readFile(){
-        try (Scanner sc = new Scanner(new BufferedReader(new FileReader("Deskovky")))){
+    public void readFile(File file){
+        try (Scanner sc = new Scanner(new BufferedReader(new FileReader("src/Deskovky")))){
             while (sc.hasNext()){
                 String line = sc.nextLine();
                 String[] bloky = line.split(";");
